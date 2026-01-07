@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>GPAYSUP – Global Payments Escalation JIRA Flow</title>
+  <style>
+    :root{
+      --bg: #0b1220;
+      --panel: rgba(255,255,255,0.06);
+      --panel2: rgba(255,255,255,0.09);
+      --text: #eaf0ff;
+      --muted: rgba(234,240,255,0.75);
+      --border: rgba(255,255,255,0.12);
+      --shadow: 0 18px 50px rgba(0,0,0,0.45);
+      --accent: #7c5cff;
+      --accent2: #22c55e;
+      --warn: #fbbf24;
+      --danger: #fb7185;
+      --line: rgba(255,255,255,0.18);
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, rgba(124,92,255,0.22), transparent 60%),
+        radial-gradient(900px 600px at 85% 20%, rgba(34,197,94,0.18), transparent 55%),
+        radial-gradient(900px 600px at 40% 95%, rgba(251,191,36,0.12), transparent 55%),
+        var(--bg);
+      color:var(--text);
+      padding: 32px 18px 60px;
+    }
+
+    .wrap{
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    header{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(18px, 2.6vw, 28px);
+      letter-spacing: 0.2px;
+      line-height: 1.15;
+    }
+
+    .subtitle{
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 14px;
+      max-width: 70ch;
+    }
+
+    .badgeRow{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content:flex-end;
+    }
+    .badge{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      backdrop-filter: blur(10px);
+      white-space: nowrap;
+    }
+    .badge strong{ color: var(--text); font-weight: 600; }
+
+    .card{
+      border: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(255,255,255,0.04));
+      border-radius: 18px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.03);
+    }
+    .topbar .title{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .dot{
+      width:10px; height:10px; border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, #fff, rgba(255,255,255,0.0) 45%), var(--accent);
+      box-shadow: 0 0 0 4px rgba(124,92,255,0.15);
+    }
+
+    /* Flow layout */
+    .flow{
+      position: relative;
+      padding: 22px 18px 26px;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      margin: 0;
+      padding: 0;
+      list-style:none;
+    }
+
+    @media (min-width: 860px){
+      .grid{
+        grid-template-columns: 1.15fr 1fr;
+        gap: 16px;
+      }
+    }
+
+    /* Main vertical spine */
+    .spine{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+      position: relative;
+      padding: 4px 0;
+    }
+
+    /* Nodes */
+    .node{
+      position: relative;
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      background: var(--panel);
+      padding: 14px 14px 12px;
+    }
+    .node:hover{ background: var(--panel2); }
+
+    .node .kicker{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .pill{
+      border-radius: 999px;
+      padding: 6px 10px;
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .node h3{
+      margin: 0 0 6px;
+      font-size: 15px;
+      line-height: 1.25;
+      letter-spacing: 0.15px;
+    }
+    .node p{
+      margin: 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    /* Down arrow between nodes */
+    .node:not(:last-child)::after{
+      content:"";
+      position:absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -14px;
+      width: 2px;
+      height: 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.0), var(--line));
+    }
+    .node:not(:last-child)::before{
+      content:"";
+      position:absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: -22px;
+      width: 0;
+      height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 9px solid var(--line);
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.25));
+    }
+
+    /* Accents */
+    .accent{ border-color: rgba(124,92,255,0.35); }
+    .accent .pill{ border-color: rgba(124,92,255,0.35); }
+    .green{ border-color: rgba(34,197,94,0.35); }
+    .green .pill{ border-color: rgba(34,197,94,0.35); }
+    .warn{ border-color: rgba(251,191,36,0.35); }
+    .warn .pill{ border-color: rgba(251,191,36,0.35); }
+    .danger{ border-color: rgba(251,113,133,0.35); }
+    .danger .pill{ border-color: rgba(251,113,133,0.35); }
+
+    /* Branch panel */
+    .branch{
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      background: rgba(255,255,255,0.03);
+      padding: 14px;
+      position: relative;
+    }
+
+    .branch h4{
+      margin: 2px 0 10px;
+      font-size: 13px;
+      color: var(--muted);
+      letter-spacing: 0.2px;
+      display:flex;
+      align-items:center;
+      gap: 10px;
+    }
+    .branch h4 span{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 12px;
+    }
+
+    .branchGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+    @media (min-width: 860px){
+      .branchGrid{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .branchItem{
+      border: 1px dashed rgba(255,255,255,0.18);
+      border-radius: 14px;
+      padding: 12px;
+      background: rgba(255,255,255,0.03);
+    }
+    .branchItem b{
+      display:block;
+      font-size: 13px;
+      margin-bottom: 4px;
+      letter-spacing: 0.1px;
+    }
+    .branchItem small{
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.4;
+      display:block;
+    }
+
+    .footerNote{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      justify-content:space-between;
+    }
+    .footerNote .cta{
+      border: 1px solid var(--border);
+      background: rgba(255,255,255,0.05);
+      padding: 8px 10px;
+      border-radius: 12px;
+    }
+
+    /* Tiny legend */
+    .legend{
+      display:flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items:center;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .key{
+      display:flex; align-items:center; gap:8px;
+      border: 1px solid var(--border);
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.04);
+    }
+    .sw{ width:10px; height:10px; border-radius:999px; }
+    .sw.a{ background: var(--accent); }
+    .sw.g{ background: var(--accent2); }
+    .sw.w{ background: var(--warn); }
+    .sw.d{ background: var(--danger); }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>GPAYSUP – Global Payments Escalation (JIRA) | Flow Chart</h1>
+        <div class="subtitle">
+          Executive-friendly intake-to-resolution flow: single global entry, automated validation + routing, clear SME ownership, SLA-driven closure.
+        </div>
+      </div>
+      <div class="badgeRow">
+        <div class="badge"><strong>Scope:</strong> Global</div>
+        <div class="badge"><strong>Tool:</strong> JIRA</div>
+        <div class="badge"><strong>Start:</strong> Intake (Program / Ops)</div>
+        <div class="badge"><strong>End:</strong> Resolution</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="topbar">
+        <div class="title"><span class="dot"></span> End-to-End Escalation Flow</div>
+        <div class="legend">
+          <span class="key"><span class="sw a"></span>System</span>
+          <span class="key"><span class="sw g"></span>SME Ownership</span>
+          <span class="key"><span class="sw w"></span>Dependencies</span>
+          <span class="key"><span class="sw d"></span>Risk / Escalation</span>
+        </div>
+      </div>
+
+      <div class="flow">
+        <div class="grid">
+          <!-- Main spine -->
+          <ol class="spine">
+            <li class="node accent">
+              <div class="kicker">
+                <span>Step 1</span>
+                <span class="pill">Intake</span>
+              </div>
+              <h3>Submit GPAYSUP Escalation (Program / Operations / Stakeholder)</h3>
+              <p>Standardized “Global Payments Escalation” JIRA form with required payment details + evidence.</p>
+            </li>
+
+            <li class="node accent">
+              <div class="kicker">
+                <span>Step 2</span>
+                <span class="pill">System</span>
+              </div>
+              <h3>Auto Validation + SLA Clock Start</h3>
+              <p>Completeness checks (IDs, priority, required fields). Bliss linkage required if escalated from Tier-1.</p>
+            </li>
+
+            <li class="node accent">
+              <div class="kicker">
+                <span>Step 3</span>
+                <span class="pill">System</span>
+              </div>
+              <h3>Automated Routing & Ownership Assignment</h3>
+              <p>Routes by Entity, LOB, Country/Region, Category, Priority → assigns correct Payments SME/POC queue.</p>
+            </li>
+
+            <li class="node green">
+              <div class="kicker">
+                <span>Step 4</span>
+                <span class="pill">SME</span>
+              </div>
+              <h3>First Response (TTFR) + Status Update</h3>
+              <p>SME acknowledges, sets status <b>In Progress</b>, and logs first-touch actions + stakeholder comms.</p>
+            </li>
+
+            <li class="node green">
+              <div class="kicker">
+                <span>Step 5</span>
+                <span class="pill">SME</span>
+              </div>
+              <h3>Investigation & Fix</h3>
+              <p>Validate payment lifecycle (Authorized/Captured/Reversed/Failed), check tools/PSP, coordinate cross-team if needed.</p>
+            </li>
+
+            <li class="node warn">
+              <div class="kicker">
+                <span>Step 6</span>
+                <span class="pill">Conditional</span>
+              </div>
+              <h3>Dependency Handling (If Required)</h3>
+              <p>Use the right status to keep SLA + audit trail accurate (reporter, cross-team support, risk escalation).</p>
+            </li>
+
+            <li class="node green">
+              <div class="kicker">
+                <span>Step 7</span>
+                <span class="pill">SME</span>
+              </div>
+              <h3>Resolution Documented</h3>
+              <p>Root cause + corrective action recorded. Move to <b>Pending Review</b> once the fix is confirmed.</p>
+            </li>
+
+            <li class="node green">
+              <div class="kicker">
+                <span>Step 8</span>
+                <span class="pill">Close</span>
+              </div>
+              <h3>Closure + Governance</h3>
+              <p>Status <b>Closed</b>. SLA adherence captured; metrics feed dashboards (TTFR, TTR, misrouting, repeat escalations).</p>
+            </li>
+          </ol>
+
+          <!-- Branches panel -->
+          <aside class="branch">
+            <h4><span>↳</span>Conditional Status Paths (Used During Step 6)</h4>
+            <div class="branchGrid">
+              <div class="branchItem warn">
+                <b>Waiting on Reporter</b>
+                <small>Missing info, confirmation needed, or requester action required. SLA risk visibility remains clear.</small>
+              </div>
+              <div class="branchItem warn">
+                <b>Awaiting Assistance</b>
+                <small>Cross-team dependency (e.g., PSP, regional ops, tool owners). Track timestamps and updates.</small>
+              </div>
+              <div class="branchItem danger">
+                <b>Escalated</b>
+                <small>High risk/complexity (P0, regulatory risk, severe disruption). Ensure leadership visibility and tighter updates.</small>
+              </div>
+              <div class="branchItem">
+                <b>Reopened</b>
+                <small>Issue persists or recurs after closure. Link prior ticket and document delta/root cause.</small>
+              </div>
+            </div>
+
+            <div class="footerNote">
+              <div class="cta">
+                <b style="color:var(--text); font-weight:600;">Executive takeaway:</b>
+                <span style="color:var(--muted);">Single intake → auto-route → single owner → SLA-driven resolution.</span>
+              </div>
+              <div style="opacity:0.9;">Statuses are timestamped & auditable in JIRA.</div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
+
