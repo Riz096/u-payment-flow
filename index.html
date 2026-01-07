@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Uber Payment Flow (Animated)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+      background-color: transparent;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+
+    .process-container {
+      width: 420px;
+      background-color: #ffffff;
+      padding: 30px 20px;
+      border-radius: 12px;
+      box-shadow: 0px 6px 16px rgba(0,0,0,0.12);
+      position: relative;
+    }
+
+    .process-title {
+      text-align: center;
+      font-size: 1.6rem;
+      margin-bottom: 18px;
+      color: #002147;
+      font-weight: bold;
+    }
+
+    .process-steps {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .step {
+      padding: 16px;
+      border-radius: 10px;
+      background-color: #cfe4f7;
+      color: #002147;
+      text-align: center;
+      font-size: 1rem;
+      opacity: 0.3;
+      transform: scale(0.95);
+      transition: all 0.6s ease;
+      z-index: 2;
+    }
+
+    .step.active {
+      background-color: #005b96;
+      color: white;
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .connector {
+      height: 30px;
+      width: 6px;
+      background-color: #cfe4f7;
+      margin: 0 auto;
+      border-radius: 3px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .connector-fill {
+      width: 100%;
+      height: 0;
+      background-color: #003366;
+      border-radius: 3px;
+      transition: height 0.8s ease;
+    }
+
+    .connector.active .connector-fill {
+      height: 100%;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+    }
+    button{
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+      background: #005b96;
+      color: #fff;
+      font-weight: 600;
+    }
+    button.secondary{
+      background: #cfe4f7;
+      color: #002147;
+    }
+
+    @media (max-width: 480px) {
+      .process-container { width: 92vw; }
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="process-container">
+  <div class="process-title">Uber Payment Flow (Animated)</div>
+
+  <div class="process-steps">
+    <div class="step" id="step1">Customer</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step2">Selects Payment Method</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step3">Pre-Authorization (Hold)</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step4">Trip / Order Completed</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step5">Final Charge (Capture)</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step6">Uber Ledger (Records & Split)</div>
+    <div class="connector"><div class="connector-fill"></div></div>
+
+    <div class="step" id="step7">Payout to Driver / Courier</div>
+  </div>
+
+  <div class="controls">
+    <button class="secondary" id="replayBtn" type="button">Replay</button>
+    <button id="loopBtn" type="button" aria-pressed="false">Loop: Off</button>
+  </div>
+</div>
+
+<script>
+  const steps = document.querySelectorAll('.step');
+  const connectors = document.querySelectorAll('.connector');
+
+  let current = 0;
+  let loop = false;
+  let timer = null;
+
+  function resetFlow() {
+    steps.forEach(s => s.classList.remove('active'));
+    connectors.forEach(c => c.classList.remove('active'));
+    current = 0;
+    if (timer) clearTimeout(timer);
+    timer = null;
+  }
+
+  function animateFlow() {
+    if (current < steps.length) {
+      steps[current].classList.add('active');
+
+      if (current > 0) {
+        connectors[current - 1].classList.add('active');
+      }
+
+      current++;
+      timer = setTimeout(animateFlow, 1200);
+    } else if (loop) {
+      timer = setTimeout(() => {
+        resetFlow();
+        animateFlow();
+      }, 900);
+    }
+  }
+
+  setTimeout(animateFlow, 800);
+
+  document.getElementById('replayBtn').addEventListener('click', () => {
+    resetFlow();
+    animateFlow();
+  });
+
+  document.getElementById('loopBtn').addEventListener('click', (e) => {
+    loop = !loop;
+    e.target.textContent = loop ? 'Loop: On' : 'Loop: Off';
+    e.target.setAttribute('aria-pressed', loop ? 'true' : 'false');
+
+    if (loop && current >= steps.length) {
+      resetFlow();
+      animateFlow();
+    }
+  });
+</script>
+
+</body>
+</html>
